@@ -19,5 +19,5 @@ public:
     double x;
     double y;
     int a;
-    bool filled;
+    bool filled = false;
 };

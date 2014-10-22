@@ -41,8 +41,8 @@ Grid decode(const char* filename)
                 pixel.a = image[y * width * 4 + x * 4 + 3];
                 
                 row.push_back(pixel);
-                
-                if (pixel.a) {
+
+                if (pixel.a > 0) {
                     grid.opaque.push_back(pixel);
                 }
             }

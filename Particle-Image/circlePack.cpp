@@ -11,54 +11,77 @@
 #include <ctime>
 #include "circlePack.h"
 
-std::vector<Pixel> area(Circle circle) {
-    std::vector<Pixel> area;
+Grid grid;
+
+std::vector<Pixel> circumferencePoints(Circle circle) {
+    std::vector<Pixel> circumferencePoints;
     
     int left = circle.x - circle.r;
     int right = circle.x + circle.r;
     int top = circle.y - circle.r;
     int bottom = circle.y + circle.r;
     
-    for (int row = top; row <= bottom; ++row) {
-        for (int col = left; col <= right; ++col) {
+//    std::cout << "start: " << circle.x << ", " << circle.y << std::endl;
+    
+    for (int row = top; row <= bottom; row++) {
+        for (int col = left; col <= right; col++) {
+            double dist = pow(circle.x - col, 2) + pow(circle.y - row, 2);
             
-            long dist = pow(circle.x - col, 2.0) + pow(circle.y - row, 2.0);
-            
-            if (dist <= pow(circle.r, 2.0)) {
-                Pixel pixel;
-                pixel.x = round(row);
-                pixel.y = round(col);
+            if (dist <= pow(circle.r, 2)) {
                 
-                area.push_back(pixel);
+                Pixel pixel;
+                pixel.x = round(col);
+                pixel.y = round(row);
+                
+                circumferencePoints.push_back(pixel);
+                
+//                std::cout << pixel.x << ", " << pixel.y << std::endl;
             }
         }
     }
-    
-    return area;
+
+//    exit(1);
+    return circumferencePoints;
 }
 
-bool isCircleInContainer(Circle circle, std::vector<std::vector<Pixel>> container) {
-
-    // Vector
-    // get area of given circle
-    std::vector<Pixel> _area = area(circle);
+void fill(std::vector<Pixel>) {
     
-//    std::cout << "Area size: " << _area.size() << std::endl;
+}
+
+bool isCircleInContainer(Circle circle) {
+
+    std::vector<Pixel> _circumferencePoints = circumferencePoints(circle);
     
     //loop through pixels and see if they are either transparent or filled
-    for (int i = 0; i < _area.size(); i++) {
-                
-        if (_area[i].y > container.size() || _area[i].x > container[_area[i].y].size() || container[_area[i].y][_area[i].x].filled || container[_area[i].y][_area[i].x].a == 0) {
+    for (int i = 0; i < _circumferencePoints.size(); i++) {
+        if (_circumferencePoints[i].y >= grid.matrix.size()) {
             return false;
         }
+        
+        if (_circumferencePoints[i].x >= grid.matrix[_circumferencePoints[i].y].size()) {
+            return false;
+        }
+        
+        if (grid.matrix[_circumferencePoints[i].y][_circumferencePoints[i].x].filled) {
+            return false;
+        }
+        
+        if (grid.matrix[_circumferencePoints[i].y][_circumferencePoints[i].x].a == 0) {
+            return false;
+        }
+    }
+    
+    // fill all the points
+    for (int i = 0; i < _circumferencePoints.size(); i++) {
+        grid.matrix[_circumferencePoints[i].y][_circumferencePoints[i].x].filled = true;
     }
     
     return true;
 }
 
 std::vector<Circle> circles;
-std::vector<Circle> circlePack(Grid grid) {
-    
+
+std::vector<Circle> _circlePack() {
     // Get a random starting point
     Pixel startPixel = grid.opaque[rand() % grid.opaque.size()];
     
@@ -67,16 +90,29 @@ std::vector<Circle> circlePack(Grid grid) {
     startCircle.y = startPixel.y;
     startCircle.r = 10;
     
-    if (isCircleInContainer(startCircle, grid.matrix)) {
-        // return the point
+    if (isCircleInContainer(startCircle)) {
         circles.push_back(startCircle);
     }
     
-//    std::cout << "# of Circles:" << circles.size() << std::endl;
-    
     if (circles.size() < 10) {
-        circlePack(grid);
+        _circlePack();
     }
+    
+    return circles;
+}
+
+std::vector<Circle> circlePack(Grid _grid) {
+    // set the global container we're filling
+    grid = _grid;
+    
+    std::vector<Circle> circles = _circlePack();
+    
+    Circle zero;
+    zero.x = 0;
+    zero.y = 0;
+    zero.r = 10;
+    
+    circles.push_back(zero);
     
     return circles;
 }
